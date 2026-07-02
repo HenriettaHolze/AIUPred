@@ -1,6 +1,8 @@
 import argparse
 import logging
+import os
 import sys
+from pathlib import Path
 from .predictor import AIUPred
 from .utils import multifasta_reader
 
@@ -59,6 +61,17 @@ def main():
 '''
     print(banner)
 
+    # 0. Check and create output directory if needed
+    if args.output_file:
+        output_dir = os.path.dirname(args.output_file)
+        if output_dir:  # Only create if there's an actual directory path
+            try:
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
+                logging.info(f'Output directory: {output_dir}')
+            except Exception as e:
+                logging.error(f'Cannot create output directory {output_dir}: {e}')
+                sys.exit(1)
+
     # 1. Read sequences
     logging.info('Reading FASTA file...')
     sequences = multifasta_reader(args.input_file)
@@ -66,7 +79,7 @@ def main():
         logging.error("FASTA file is empty or invalid.")
         sys.exit(1)
     
-    # 2. Initialize the Predictor ONCE
+    # 3. Initialize the Predictor ONCE
     logging.info('Initializing AIUPred networks...')
     predictor = AIUPred(force_cpu=args.force_cpu, gpu_num=args.gpu)
 
